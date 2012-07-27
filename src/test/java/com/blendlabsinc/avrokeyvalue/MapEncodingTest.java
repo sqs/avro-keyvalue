@@ -98,4 +98,22 @@ public class MapEncodingTest extends TestCase {
 
         assertEquals(expected, write(schema, nestedMap));
     }
+
+    public void testDeeplyNestedMap() throws IOException {
+        Schema schema = Schema.parse("{\"type\": \"map\", \"values\": {\"type\": \"map\", \"values\": {\"type\": \"map\", \"values\": \"string\"}}}");
+        Map<String, Map<String, Map<String, String>>> nestedMap = new java.util.HashMap();
+        Map<String, String> mapAA = new java.util.HashMap(); mapAA.put("aaa", "aaaa");
+        Map<String, String> mapBB = new java.util.HashMap(); mapBB.put("bbb", "bbbb");
+        Map<String, Map<String, String>> mapA = new java.util.HashMap(); mapA.put("aa", mapAA);
+        Map<String, Map<String, String>> mapB = new java.util.HashMap(); mapB.put("bb", mapBB);
+        nestedMap.put("a", mapA);
+        nestedMap.put("b", mapB);
+
+        Map<String, String> expected = new java.util.HashMap();
+        expected.put("a|aa|aaa", "aaaa");
+        expected.put("b|bb|bbb", "bbbb");
+
+        assertEquals(expected, write(schema, nestedMap));
+    }
+
 }
