@@ -3,6 +3,7 @@ package com.blendlabsinc.avrokeyvalue;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Map;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -40,9 +41,9 @@ public class MapEncodingTest extends TestCase {
      * Helpers
      */
 
-    private java.util.Map<String, String> write(Schema schema, Object datum) throws IOException {
+    private Map<String, String> write(Schema schema, Object datum) throws IOException {
         DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
-        java.util.Map<String, String> out = new java.util.HashMap();
+        Map<String, String> out = new java.util.HashMap();
         KeyValueEncoder encoder = new KeyValueEncoder(schema, out);
         writer.write(datum, encoder);
         return out;
@@ -54,7 +55,7 @@ public class MapEncodingTest extends TestCase {
 
     public void testMap() throws IOException {
         Schema schema = Schema.parse("{\"type\": \"map\", \"values\": \"string\"}");
-        java.util.Map<String, String> expected = new java.util.HashMap();
+        Map<String, String> expected = new java.util.HashMap();
         expected.put("a", "aa");
         expected.put("b", "bb");
         assertEquals(expected, write(schema, expected));
@@ -62,26 +63,26 @@ public class MapEncodingTest extends TestCase {
 
     public void testEmptyMap() throws IOException {
         Schema schema = Schema.parse("{\"type\": \"map\", \"values\": \"string\"}");
-        java.util.Map<String, String> expected = new java.util.HashMap();
+        Map<String, String> expected = new java.util.HashMap();
         assertEquals(expected, write(schema, expected));
     }
 
     public void testMapWithEmptyKey() throws IOException {
         Schema schema = Schema.parse("{\"type\": \"map\", \"values\": \"string\"}");
-        java.util.Map<String, String> expected = new java.util.HashMap();
+        Map<String, String> expected = new java.util.HashMap();
         expected.put("", "a");
         assertEquals(expected, write(schema, expected));
     }
 
     public void testNestedMap() throws IOException {
         Schema schema = Schema.parse("{\"type\": \"map\", \"values\": {\"type\": \"map\", \"values\": \"string\"}}");
-        java.util.Map<String, java.util.Map<String, String>> nestedMap = new java.util.HashMap();
-        java.util.Map<String, String> mapA = new java.util.HashMap(); mapA.put("aa", "aaa");
-        java.util.Map<String, String> mapB = new java.util.HashMap(); mapB.put("bb", "bbb");
+        Map<String, Map<String, String>> nestedMap = new java.util.HashMap();
+        Map<String, String> mapA = new java.util.HashMap(); mapA.put("aa", "aaa");
+        Map<String, String> mapB = new java.util.HashMap(); mapB.put("bb", "bbb");
         nestedMap.put("a", mapA);
         nestedMap.put("b", mapB);
 
-        java.util.Map<String, String> expected = new java.util.HashMap();
+        Map<String, String> expected = new java.util.HashMap();
         expected.put("a|aa", "aaa");
         expected.put("b|bb", "bbb");
 
