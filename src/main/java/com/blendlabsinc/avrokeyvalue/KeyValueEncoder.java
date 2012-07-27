@@ -136,14 +136,7 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
 
   @Override
   public void writeFixed(byte[] bytes, int start, int len) throws IOException {
-    parser.advance(Symbol.FIXED);
-//    Symbol.IntCheckAction top = (Symbol.IntCheckAction) parser.popSymbol();
-//    if (len != top.size) {
-//      throw new AvroTypeException(
-//        "Incorrect length for fixed binary: expected " +
-//        top.size + " but received " + len + " bytes.");
-//    }
-//    writeByteArray(bytes, start, len);
+    throw new IOException("Fixed encoding is not implemented");
   }
 
   @Override
@@ -161,10 +154,7 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
 
   @Override
   public void writeArrayStart() throws IOException {
-    parser.advance(Symbol.ARRAY_START);
-    // out.writeStartArray();
-    push();
-    isEmpty.set(depth());
+    throw new IOException("Array encoding is not implemented");
   }
 
   @Override
