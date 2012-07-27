@@ -64,4 +64,16 @@ public class UnionEncodingTest extends TestCase {
         expectedI.put("int", "1");
         assertEquals(expectedI, write(schema, 1));
     }
+
+    public void testUnionWithNull() throws IOException {
+        Schema schema = Schema.parse("[\"null\", \"string\"]");
+
+        Map<String, String> expectedN = new java.util.HashMap();
+        expectedN.put("string", "a");
+        assertEquals(expectedN, write(schema, "a"));
+
+        Map<String, String> expectedS = new java.util.HashMap();
+        expectedS.put("", "");
+        assertEquals(expectedS, write(schema, null));
+    }
 }
