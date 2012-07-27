@@ -211,14 +211,13 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
   @Override
   public void writeIndex(int unionIndex) throws IOException {
     parser.advance(Symbol.UNION);
-    // Symbol.Alternative top = (Symbol.Alternative) parser.popSymbol();
-    // Symbol symbol = top.getSymbol(unionIndex);
-    //if (symbol != Symbol.NULL) {
-      // out.writeStartObject();
-      // out.writeFieldName(top.getLabel(unionIndex));
-    //  parser.pushSymbol(Symbol.UNION_END);
-    //}
-    //parser.pushSymbol(symbol);
+    Symbol.Alternative top = (Symbol.Alternative) parser.popSymbol();
+    Symbol symbol = top.getSymbol(unionIndex);
+    if (symbol != Symbol.NULL) {
+      pushKeyPathComponent(top.getLabel(unionIndex));
+      parser.pushSymbol(Symbol.UNION_END);
+    }
+    parser.pushSymbol(symbol);
   }
 
   @Override
