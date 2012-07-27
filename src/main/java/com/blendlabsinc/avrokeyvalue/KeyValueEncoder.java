@@ -149,13 +149,14 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
   @Override
   public void writeEnum(int e) throws IOException {
     parser.advance(Symbol.ENUM);
-    //Symbol.EnumLabelsAction top = (Symbol.EnumLabelsAction) parser.popSymbol();
-    //if (e < 0 || e >= top.size) {
-    //  throw new AvroTypeException(
-    //      "Enumeration out of range: max is " +
-    //      top.size + " but received " + e);
-    //}
-    // out.writeString(top.getLabel(e));
+    Symbol.EnumLabelsAction top = (Symbol.EnumLabelsAction) parser.popSymbol();
+    trace("writeEnum(" + e + " : " + top.getLabel(e) + ")");
+    if (e < 0 || e >= top.size) {
+      throw new AvroTypeException(
+          "Enumeration out of range: max is " +
+          top.size + " but received " + e);
+    }
+    out.put(getKeyPathString(), top.getLabel(e));
   }
 
   @Override
