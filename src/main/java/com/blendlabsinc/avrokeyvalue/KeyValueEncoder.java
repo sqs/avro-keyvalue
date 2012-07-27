@@ -224,13 +224,15 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
   @Override
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
     if (top instanceof Symbol.FieldAdjustAction) {
-      // Symbol.FieldAdjustAction fa = (Symbol.FieldAdjustAction) top;
-      // out.writeFieldName(fa.fname);
+      Symbol.FieldAdjustAction fa = (Symbol.FieldAdjustAction) top;
+      pushKeyPathComponent(fa.fname);
     } else if (top == Symbol.RECORD_START) {
       // out.writeStartObject();
     } else if (top == Symbol.RECORD_END || top == Symbol.UNION_END) {
       // out.writeEndObject();
-    } else if (top != Symbol.FIELD_END) {
+    } else if (top == Symbol.FIELD_END) {
+      popKeyPathComponent();
+    } else {
       throw new AvroTypeException("Unknown action symbol " + top);
     }
     return null;
