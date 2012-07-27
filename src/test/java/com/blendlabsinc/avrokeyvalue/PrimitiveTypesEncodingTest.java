@@ -52,11 +52,66 @@ public class PrimitiveTypesEncodingTest extends TestCase {
      * Test cases
      */
 
+    public void testNull() throws IOException {
+        Schema schema = Schema.parse("\"null\"");
+        java.util.Map<String, String> expected = new java.util.HashMap();
+        expected.put("", "");
+        assertEquals(expected, write(schema, null));
+    }
+
+    public void testBoolean() throws IOException {
+        Schema schema = Schema.parse("\"boolean\"");
+
+        java.util.Map<String, String> expectedT = new java.util.HashMap();
+        expectedT.put("", "true");
+        assertEquals(expectedT, write(schema, true));
+
+        java.util.Map<String, String> expectedF = new java.util.HashMap();
+        expectedF.put("", "false");
+        assertEquals(expectedF, write(schema, false));
+    }
+
+    public void testInt() throws IOException {
+        Schema schema = Schema.parse("\"int\"");
+        java.util.Map<String, String> expected = new java.util.HashMap();
+        expected.put("", "1");
+        assertEquals(expected, write(schema, new Integer(1)));
+    }
+
+    public void testLong() throws IOException {
+        Schema schema = Schema.parse("\"long\"");
+        java.util.Map<String, String> expected = new java.util.HashMap();
+        expected.put("", "34359738368"); // 2^35
+        assertEquals(expected, write(schema, new Long(34359738368L)));
+    }
+
+    public void testFloat() throws IOException {
+        Schema schema = Schema.parse("\"float\"");
+        java.util.Map<String, String> expected = new java.util.HashMap();
+        expected.put("", "1.5");
+
+        assertEquals(expected, write(schema, new Float(1.5)));
+    }
+
+    public void testDouble() throws IOException {
+        Schema schema = Schema.parse("\"double\"");
+        java.util.Map<String, String> expected = new java.util.HashMap();
+        expected.put("", "1.5");
+
+        assertEquals(expected, write(schema, new Double(1.5)));
+    }
+
     public void testString() throws IOException {
         Schema schema = Schema.parse("\"string\"");
         java.util.Map<String, String> expected = new java.util.HashMap();
         expected.put("", "a");
-
         assertEquals(expected, write(schema, "a"));
     }
+
+    public void testBytes() throws IOException {
+        Schema schema = Schema.parse("\"bytes\"");
+        // TODO
+    }
+
+
 }

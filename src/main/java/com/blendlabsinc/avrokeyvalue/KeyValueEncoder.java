@@ -57,37 +57,37 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
   @Override
   public void writeNull() throws IOException {
     // parser.advance(Symbol.NULL);
-    // out.writeNull();
+    out.put("", "");
   }
 
   @Override
   public void writeBoolean(boolean b) throws IOException {
     // parser.advance(Symbol.BOOLEAN);
-    // out.writeBoolean(b);
+    out.put("", Boolean.toString(b));
   }
 
   @Override
   public void writeInt(int n) throws IOException {
     // parser.advance(Symbol.INT);
-    // out.writeNumber(n);
+    out.put("", Integer.toString(n));
   }
 
   @Override
   public void writeLong(long n) throws IOException {
     // parser.advance(Symbol.LONG);
-    // out.writeNumber(n);
+    out.put("", Long.toString(n));
   }
 
   @Override
   public void writeFloat(float f) throws IOException {
     // parser.advance(Symbol.FLOAT);
-    // out.writeNumber(f);
+    out.put("", Float.toString(f));
   }
 
   @Override
   public void writeDouble(double d) throws IOException {
     // parser.advance(Symbol.DOUBLE);
-    // out.writeNumber(d);
+    out.put("", Double.toString(d));
   }
 
   @Override
