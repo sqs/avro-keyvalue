@@ -50,11 +50,64 @@ public class PrimitiveTypesDecodingTest extends TestCase {
      * Test cases
      */
 
+    public void testNull() throws IOException {
+        Schema schema = Schema.parse("\"null\"");
+        java.util.Map<String, Object> in = new java.util.HashMap();
+        in.put("", "");
+        assertEquals(null, decode(schema, in));
+    }
+
+    public void testBoolean() throws IOException {
+        Schema schema = Schema.parse("\"boolean\"");
+
+        java.util.Map<String, Object> inT = new java.util.HashMap();
+        inT.put("", "true");
+        assertEquals(true, decode(schema, inT));
+
+        java.util.Map<String, Object> inF = new java.util.HashMap();
+        inF.put("", "false");
+        assertEquals(false, decode(schema, inF));
+    }
+
+    public void testInt() throws IOException {
+        Schema schema = Schema.parse("\"int\"");
+        java.util.Map<String, Object> in = new java.util.HashMap();
+        in.put("", "1");
+        assertEquals(new Integer(1), decode(schema, in));
+    }
+
+    public void testLong() throws IOException {
+        Schema schema = Schema.parse("\"long\"");
+        java.util.Map<String, Object> in = new java.util.HashMap();
+        in.put("", "34359738368"); // 2^35
+        assertEquals(new Long(34359738368L), decode(schema, in));
+    }
+
+    public void testFloat() throws IOException {
+        Schema schema = Schema.parse("\"float\"");
+        java.util.Map<String, Object> in = new java.util.HashMap();
+        in.put("", "1.5");
+        assertEquals(new Float(1.5), decode(schema, in));
+    }
+
+    public void testDouble() throws IOException {
+        Schema schema = Schema.parse("\"double\"");
+        java.util.Map<String, Object> in = new java.util.HashMap();
+        in.put("", "1.5");
+        assertEquals(new Double(1.5), decode(schema, in));
+    }
+
     public void testString() throws IOException {
         Schema schema = Schema.parse("\"string\"");
         Map<String, Object> in = new java.util.HashMap();
         in.put("", "a");
         assertEquals(new Utf8("a"), decode(schema, in));
     }
+
+    public void testBytes() throws IOException {
+        Schema schema = Schema.parse("\"bytes\"");
+        // TODO
+    }
+
 
 }

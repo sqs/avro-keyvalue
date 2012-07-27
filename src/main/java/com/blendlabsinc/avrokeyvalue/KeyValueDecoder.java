@@ -32,31 +32,34 @@ public class KeyValueDecoder extends Decoder {
 
   @Override
   public void readNull() throws IOException {
+    if (!((String)in.get("")).equals("")) {
+      error("null");
+    }
   }
 
   @Override
   public boolean readBoolean() throws IOException {
-    return false;
+    return ((String)in.get("")).equals(Boolean.toString(true));
   }
 
   @Override
   public int readInt() throws IOException {
-    return 0;
+    return Integer.parseInt((String)in.get(""));
   }
 
   @Override
   public long readLong() throws IOException {
-    return 0;
+    return Long.parseLong((String)in.get(""));
   }
 
   @Override
   public float readFloat() throws IOException {
-    return 0;
+    return Float.parseFloat((String)in.get(""));
   }
 
   @Override
   public double readDouble() throws IOException {
-    return 0;
+    return Double.parseDouble((String)in.get(""));
   }
 
   @Override
