@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
+import org.apache.commons.lang3.StringUtils;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -57,37 +58,37 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
   @Override
   public void writeNull() throws IOException {
     parser.advance(Symbol.NULL);
-    out.put(getKeyPath(), "");
+    out.put(getKeyPathString(), "");
   }
 
   @Override
   public void writeBoolean(boolean b) throws IOException {
     parser.advance(Symbol.BOOLEAN);
-    out.put(getKeyPath(), Boolean.toString(b));
+    out.put(getKeyPathString(), Boolean.toString(b));
   }
 
   @Override
   public void writeInt(int n) throws IOException {
     parser.advance(Symbol.INT);
-    out.put(getKeyPath(), Integer.toString(n));
+    out.put(getKeyPathString(), Integer.toString(n));
   }
 
   @Override
   public void writeLong(long n) throws IOException {
     parser.advance(Symbol.LONG);
-    out.put(getKeyPath(), Long.toString(n));
+    out.put(getKeyPathString(), Long.toString(n));
   }
 
   @Override
   public void writeFloat(float f) throws IOException {
     parser.advance(Symbol.FLOAT);
-    out.put(getKeyPath(), Float.toString(f));
+    out.put(getKeyPathString(), Float.toString(f));
   }
 
   @Override
   public void writeDouble(double d) throws IOException {
     parser.advance(Symbol.DOUBLE);
-    out.put(getKeyPath(), Double.toString(d));
+    out.put(getKeyPathString(), Double.toString(d));
   }
 
   @Override
@@ -98,12 +99,13 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
   @Override 
   public void writeString(String str) throws IOException {
     parser.advance(Symbol.STRING);
+    trace("writeString(" + str + ")");
     if (parser.topSymbol() == Symbol.MAP_KEY_MARKER) {
       parser.advance(Symbol.MAP_KEY_MARKER);
       pushKeyPathComponent(str);
       // out.writeFieldName(str);
     } else {
-      out.put(getKeyPath(), str);
+      out.put(getKeyPathString(), str);
     }
   }
 
@@ -187,6 +189,7 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
   public void writeMapEnd() throws IOException {
     if (! isEmpty.get(pos)) {
       parser.advance(Symbol.ITEM_END);
+      popKeyPathComponent();
     }
     pop();
 
@@ -196,8 +199,10 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
 
   @Override
   public void startItem() throws IOException {
+    trace("startItem");
     if (! isEmpty.get(pos)) {
       parser.advance(Symbol.ITEM_END);
+      popKeyPathComponent();
     }
     super.startItem();
     isEmpty.clear(depth());
@@ -234,18 +239,24 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
   /////////////////////////////////////////////////////////////////////////////
   // Key path
 
-  private String keyPath = "";
+  private java.util.ArrayList<String> keyPath = new java.util.ArrayList();
 
   private void pushKeyPathComponent(String component) {
-    keyPath = component;
+    keyPath.add(component);
   }
 
   private void popKeyPathComponent() {
-    keyPath = "";
+    keyPath.remove(keyPath.size() - 1);
   }
 
-  private String getKeyPath() {
-    return keyPath;
+  private String getKeyPathString() {
+    return StringUtils.join(keyPath, '|');
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+
+  private void trace(String s) {
+    System.out.println(s + ":\t topSymbol=" + parser.topSymbol() + " keyPath=" + getKeyPathString());
   }
 }
 
