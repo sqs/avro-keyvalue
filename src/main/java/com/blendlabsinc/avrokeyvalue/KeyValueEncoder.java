@@ -56,38 +56,38 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
 
   @Override
   public void writeNull() throws IOException {
-    // parser.advance(Symbol.NULL);
-    out.put("", "");
+    parser.advance(Symbol.NULL);
+    out.put(getKeyPath(), "");
   }
 
   @Override
   public void writeBoolean(boolean b) throws IOException {
-    // parser.advance(Symbol.BOOLEAN);
-    out.put("", Boolean.toString(b));
+    parser.advance(Symbol.BOOLEAN);
+    out.put(getKeyPath(), Boolean.toString(b));
   }
 
   @Override
   public void writeInt(int n) throws IOException {
-    // parser.advance(Symbol.INT);
-    out.put("", Integer.toString(n));
+    parser.advance(Symbol.INT);
+    out.put(getKeyPath(), Integer.toString(n));
   }
 
   @Override
   public void writeLong(long n) throws IOException {
-    // parser.advance(Symbol.LONG);
-    out.put("", Long.toString(n));
+    parser.advance(Symbol.LONG);
+    out.put(getKeyPath(), Long.toString(n));
   }
 
   @Override
   public void writeFloat(float f) throws IOException {
-    // parser.advance(Symbol.FLOAT);
-    out.put("", Float.toString(f));
+    parser.advance(Symbol.FLOAT);
+    out.put(getKeyPath(), Float.toString(f));
   }
 
   @Override
   public void writeDouble(double d) throws IOException {
-    // parser.advance(Symbol.DOUBLE);
-    out.put("", Double.toString(d));
+    parser.advance(Symbol.DOUBLE);
+    out.put(getKeyPath(), Double.toString(d));
   }
 
   @Override
@@ -97,12 +97,13 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
   
   @Override 
   public void writeString(String str) throws IOException {
-    // parser.advance(Symbol.STRING);
-    if (false /*parser.topSymbol() == Symbol.MAP_KEY_MARKER*/) {
-      // parser.advance(Symbol.MAP_KEY_MARKER);
+    parser.advance(Symbol.STRING);
+    if (parser.topSymbol() == Symbol.MAP_KEY_MARKER) {
+      parser.advance(Symbol.MAP_KEY_MARKER);
+      pushKeyPathComponent(str);
       // out.writeFieldName(str);
     } else {
-      out.put("", str);
+      out.put(getKeyPath(), str);
     }
   }
 
@@ -121,7 +122,7 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
 
   @Override
   public void writeBytes(byte[] bytes, int start, int len) throws IOException {
-    // parser.advance(Symbol.BYTES);
+    parser.advance(Symbol.BYTES);
     writeByteArray(bytes, start, len);
   }
 
@@ -133,7 +134,7 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
 
   @Override
   public void writeFixed(byte[] bytes, int start, int len) throws IOException {
-    // parser.advance(Symbol.FIXED);
+    parser.advance(Symbol.FIXED);
 //    Symbol.IntCheckAction top = (Symbol.IntCheckAction) parser.popSymbol();
 //    if (len != top.size) {
 //      throw new AvroTypeException(
@@ -145,7 +146,7 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
 
   @Override
   public void writeEnum(int e) throws IOException {
-    // parser.advance(Symbol.ENUM);
+    parser.advance(Symbol.ENUM);
     //Symbol.EnumLabelsAction top = (Symbol.EnumLabelsAction) parser.popSymbol();
     //if (e < 0 || e >= top.size) {
     //  throw new AvroTypeException(
@@ -157,7 +158,7 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
 
   @Override
   public void writeArrayStart() throws IOException {
-    // parser.advance(Symbol.ARRAY_START);
+    parser.advance(Symbol.ARRAY_START);
     // out.writeStartArray();
     push();
     isEmpty.set(depth());
@@ -166,10 +167,10 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
   @Override
   public void writeArrayEnd() throws IOException {
     if (! isEmpty.get(pos)) {
-      // parser.advance(Symbol.ITEM_END);
+      parser.advance(Symbol.ITEM_END);
     }
     pop();
-    // parser.advance(Symbol.ARRAY_END);
+    parser.advance(Symbol.ARRAY_END);
     // out.writeEndArray();
   }
 
@@ -178,25 +179,25 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
     push();
     isEmpty.set(depth());
 
-    // parser.advance(Symbol.MAP_START);
+    parser.advance(Symbol.MAP_START);
     // out.writeStartObject();
   }
 
   @Override
   public void writeMapEnd() throws IOException {
     if (! isEmpty.get(pos)) {
-      // parser.advance(Symbol.ITEM_END);
+      parser.advance(Symbol.ITEM_END);
     }
     pop();
 
-    // parser.advance(Symbol.MAP_END);
+    parser.advance(Symbol.MAP_END);
     // out.writeEndObject();
   }
 
   @Override
   public void startItem() throws IOException {
     if (! isEmpty.get(pos)) {
-      // parser.advance(Symbol.ITEM_END);
+      parser.advance(Symbol.ITEM_END);
     }
     super.startItem();
     isEmpty.clear(depth());
@@ -204,7 +205,7 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
 
   @Override
   public void writeIndex(int unionIndex) throws IOException {
-    // parser.advance(Symbol.UNION);
+    parser.advance(Symbol.UNION);
     // Symbol.Alternative top = (Symbol.Alternative) parser.popSymbol();
     // Symbol symbol = top.getSymbol(unionIndex);
     //if (symbol != Symbol.NULL) {
@@ -228,6 +229,23 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
       throw new AvroTypeException("Unknown action symbol " + top);
     }
     return null;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Key path
+
+  private String keyPath = "";
+
+  private void pushKeyPathComponent(String component) {
+    keyPath = component;
+  }
+
+  private void popKeyPathComponent() {
+    keyPath = "";
+  }
+
+  private String getKeyPath() {
+    return keyPath;
   }
 }
 
