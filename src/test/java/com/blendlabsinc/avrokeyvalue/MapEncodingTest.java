@@ -61,6 +61,16 @@ public class MapEncodingTest extends TestCase {
         assertEquals(expected, write(schema, expected));
     }
 
+    public void testBigMap() throws IOException {
+        Schema schema = Schema.parse("{\"type\": \"map\", \"values\": \"string\"}");
+        Map<String, String> expected = new java.util.HashMap();
+        expected.put("a", "aa");
+        expected.put("b", "bb");
+        expected.put("c", "cc");
+        expected.put("d", "dd");
+        assertEquals(expected, write(schema, expected));
+    }
+
     public void testEmptyMap() throws IOException {
         Schema schema = Schema.parse("{\"type\": \"map\", \"values\": \"string\"}");
         Map<String, String> expected = new java.util.HashMap();
