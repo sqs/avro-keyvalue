@@ -67,4 +67,22 @@ public class RecordEncodingTest extends TestCase {
         expected.put("b", "1");
         assertEquals(expected, write(schema, rec));
     }
+
+  public void testRecordWithMaps() throws IOException {
+    Schema schema = Schema.parse("{\"type\": \"record\", \"name\": \"MyRecord\", \"fields\": [{\"name\": \"a\", \"type\": {\"type\": \"map\", \"values\": \"string\"}}, {\"name\": \"b\", \"type\": {\"type\": \"map\", \"values\": \"string\"}}]}");
+
+    Map<String, String> aMap = new java.util.TreeMap();
+    Map<String, String> bMap = new java.util.TreeMap();
+    aMap.put("aa", "aaa");
+    bMap.put("bb", "bbb");
+
+    GenericRecord rec = new GenericData.Record(schema);
+    rec.put("a", aMap);
+    rec.put("b", bMap);
+
+    Map<String, String> expected = new java.util.HashMap();
+    expected.put("a|aa", "aaa");
+    expected.put("b|bb", "bbb");
+    assertEquals(expected, write(schema, rec));
+  }
 }
