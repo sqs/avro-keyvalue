@@ -56,21 +56,21 @@ public class MapDecodingTest extends TestCase {
       return stringMap;
     }
 
-    private Object convertStringToUtf8(Map<String, Object> map) throws IOException {
+    private Object convertStringToUtf8(Map<String, ?> map) throws IOException {
       Map<Utf8, Object> stringMap = new java.util.TreeMap();
-      for (Map.Entry<String, Object> entry : map.entrySet()) {
+      for (Map.Entry<String, ?> entry : map.entrySet()) {
         Object value = entry.getValue();
         if (value instanceof String) {
           value = new Utf8((String)value);
         } else if (value instanceof Map<?, ?>) {
-          value = convertStringToUtf8((Map<String, Object>)value);
+          value = convertStringToUtf8((Map<String, ?>)value);
         }
         stringMap.put(new Utf8(entry.getKey()), value);
       }
       return stringMap;
     }
 
-    private Object decode(Schema schema, Map<String, Object> in) throws IOException {
+    private Object decode(Schema schema, Map<String, String> in) throws IOException {
       DatumReader<Object> reader = new GenericDatumReader<Object>(schema);
       Decoder decoder = new KeyValueDecoder(schema, in);
       return reader.read(null, decoder);
@@ -83,7 +83,7 @@ public class MapDecodingTest extends TestCase {
     public void testMap() throws IOException {
         Schema schema = Schema.parse("{\"type\": \"map\", \"values\": \"int\"}");
 
-        Map<String, Object> in = new java.util.TreeMap();
+        Map<String, String> in = new java.util.TreeMap();
         in.put("a", "1");
         in.put("b", "2");
 
@@ -96,7 +96,7 @@ public class MapDecodingTest extends TestCase {
 
     public void testBigMap() throws IOException {
          Schema schema = Schema.parse("{\"type\": \"map\", \"values\": \"string\"}");
-         Map<String, Object> in = new java.util.TreeMap();
+         Map<String, String> in = new java.util.TreeMap();
          in.put("a", "aa");
          in.put("b", "bb");
          in.put("c", "cc");
@@ -107,13 +107,13 @@ public class MapDecodingTest extends TestCase {
 
     public void testEmptyMap() throws IOException {
          Schema schema = Schema.parse("{\"type\": \"map\", \"values\": \"string\"}");
-         Map<String, Object> in = new java.util.TreeMap();
+         Map<String, String> in = new java.util.TreeMap();
          assertEquals(convertStringToUtf8(in), decode(schema, in));
     }
 
     public void testMapWithEmptyKey() throws IOException {
          Schema schema = Schema.parse("{\"type\": \"map\", \"values\": \"string\"}");
-         Map<String, Object> in = new java.util.TreeMap();
+         Map<String, String> in = new java.util.TreeMap();
          in.put("", "a");
          assertEquals(convertStringToUtf8(in), decode(schema, in));
     }
@@ -126,7 +126,7 @@ public class MapDecodingTest extends TestCase {
          nestedMap.put("a", mapA);
          nestedMap.put("b", mapB);
 
-         Map<String, Object> in = new java.util.TreeMap();
+         Map<String, String> in = new java.util.TreeMap();
          in.put("a|aa", "aaa");
          in.put("b|bb", "bbb");
 
@@ -145,7 +145,7 @@ public class MapDecodingTest extends TestCase {
          nestedMap.put("a", mapA);
          nestedMap.put("b", mapB);
 
-         Map<String, Object> in = new java.util.TreeMap();
+         Map<String, String> in = new java.util.TreeMap();
          in.put("a|aa|aaa", "aaaa");
          in.put("b|bb|bbb", "bbbb");
 

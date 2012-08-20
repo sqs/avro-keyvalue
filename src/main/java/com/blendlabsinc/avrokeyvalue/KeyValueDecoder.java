@@ -32,12 +32,12 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
     public Map<String, String> origParser = null;
   }
 
-  private KeyValueDecoder(Symbol root, Map<String, Object> in) throws IOException {
+  private KeyValueDecoder(Symbol root, Map<String, String> in) throws IOException {
     super(root);
     configure(in);
   }
 
-  KeyValueDecoder(Schema schema, Map<String, Object> in) throws IOException {
+  KeyValueDecoder(Schema schema, Map<String, String> in) throws IOException {
     this(getSymbol(schema), in);
   }
 
@@ -48,7 +48,7 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
     return new JsonGrammarGenerator().generate(schema);
   }
 
-  public KeyValueDecoder configure(Map<String, Object> in) throws IOException {
+  public KeyValueDecoder configure(Map<String, String> in) throws IOException {
     if (null == in) {
       throw new NullPointerException("Map to read from cannot be null!");
     }

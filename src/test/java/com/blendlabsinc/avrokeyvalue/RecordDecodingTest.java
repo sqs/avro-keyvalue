@@ -69,7 +69,7 @@ public class RecordDecodingTest extends TestCase {
     return stringMap;
   }
 
-  private Object decode(Schema schema, Map<String, Object> in) throws IOException {
+  private Object decode(Schema schema, Map<String, String> in) throws IOException {
     DatumReader<Object> reader = new GenericDatumReader<Object>(schema);
     Decoder decoder = new KeyValueDecoder(schema, in);
     return reader.read(null, decoder);
@@ -85,7 +85,7 @@ public class RecordDecodingTest extends TestCase {
       GenericRecord expected = new GenericData.Record(schema);
       expected.put("a", 1);
 
-      Map<String, Object> in = new TreeMap();
+      Map<String, String> in = new TreeMap();
       in.put("a", "1");
 
       assertEquals(expected, decode(schema, in));
@@ -97,7 +97,7 @@ public class RecordDecodingTest extends TestCase {
     GenericRecord expected = new GenericData.Record(schema);
     expected.put("a", null);
 
-    Map<String, Object> in = new TreeMap();
+    Map<String, String> in = new TreeMap();
 
     assertEquals(expected, decode(schema, in));
   }
@@ -109,7 +109,7 @@ public class RecordDecodingTest extends TestCase {
       expected.put("a", "aa");
       expected.put("b", 1);
 
-      Map<String, Object> in = new TreeMap();
+      Map<String, String> in = new TreeMap();
       in.put("a", "aa");
       in.put("b", "1");
 
@@ -128,7 +128,7 @@ public class RecordDecodingTest extends TestCase {
     expected.put("a", convertStringToUtf8(aMap));
     expected.put("b", convertStringToUtf8(bMap));
 
-    Map<String, Object> in = new java.util.TreeMap();
+    Map<String, String> in = new java.util.TreeMap();
     in.put("a|aa", "aaa");
     in.put("b|bb", "bbb");
 
@@ -138,18 +138,18 @@ public class RecordDecodingTest extends TestCase {
   public void testRecordWithUnion() throws IOException {
     Schema schema = Schema.parse("{\"type\": \"record\", \"name\": \"MyRecord\", \"fields\": [{\"name\": \"a\", \"type\": [\"null\", \"int\", {\"type\": \"map\", \"values\": \"string\"}]}]}");
 
-    Map<String, Object> inN = new java.util.TreeMap();
+    Map<String, String> inN = new java.util.TreeMap();
     GenericRecord expectedN = new GenericData.Record(schema);
     expectedN.put("a", null);
     assertEquals(expectedN, decode(schema, inN));
 
-    Map<String, Object> inI = new java.util.TreeMap();
+    Map<String, String> inI = new java.util.TreeMap();
     inI.put("a|int", "123");
     GenericRecord expectedI = new GenericData.Record(schema);
     expectedI.put("a", 123);
     assertEquals(expectedI, decode(schema, inI));
 
-    Map<String, Object> inM = new java.util.TreeMap();
+    Map<String, String> inM = new java.util.TreeMap();
     inM.put("a|map|aa", "aaa");
     inM.put("a|map|bb", "bbb");
     GenericRecord expectedM = new GenericData.Record(schema);
