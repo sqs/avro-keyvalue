@@ -128,10 +128,8 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
     writeByteArray(bytes, start, len);
   }
 
-  private void writeByteArray(byte[] bytes, int start, int len)
-    throws IOException {
-    // out.writeString(
-        new String(bytes, start, len, "UTF-8");
+  private void writeByteArray(byte[] bytes, int start, int len) throws IOException {
+    out.put(getKeyPathString(), new String(bytes, start, len, "UTF-8"));
   }
 
   @Override

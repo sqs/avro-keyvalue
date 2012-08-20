@@ -3,6 +3,7 @@ package com.blendlabsinc.avrokeyvalue;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -109,8 +110,11 @@ public class PrimitiveTypesEncodingTest extends TestCase {
     }
 
     public void testBytes() throws IOException {
-        Schema schema = Schema.parse("\"bytes\"");
-        // TODO
+      Schema schema = Schema.parse("\"bytes\"");
+      java.util.Map<String, String> expected = new java.util.HashMap();
+      expected.put("", "a");
+      byte[] bytes = {'a'};
+      assertEquals(expected, write(schema, ByteBuffer.wrap(bytes)));
     }
 
 
