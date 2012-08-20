@@ -6,11 +6,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.TreeMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -24,9 +20,16 @@ import org.apache.avro.util.Utf8;
 import org.apache.commons.lang3.StringUtils;
 
 public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHandler {
-  
+
   private Schema schema;
   private Map<String, Object> in;
+
+  Stack<ReorderBuffer> reorderBuffers = new Stack<ReorderBuffer>();
+  ReorderBuffer currentReorderBuffer;
+
+  private static class ReorderBuffer {
+    public Map<String, String> savedFields = new HashMap<String, String>();
+  }
 
   private KeyValueDecoder(Symbol root, Map<String, Object> in) throws IOException {
     super(root);
@@ -41,7 +44,7 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
     if (null == schema) {
       throw new NullPointerException("Schema cannot be null!");
     }
-    return new ValidatingGrammarGenerator().generate(schema);
+    return new JsonGrammarGenerator().generate(schema);
   }
 
   public KeyValueDecoder configure(Map<String, Object> in) throws IOException {
@@ -115,19 +118,17 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
 
   @Override
   public String readString() throws IOException {
+    advance(Symbol.STRING);
     trace("readString");
-    Boolean shouldReadMapKey = parser.topSymbol() == Symbol.MAP_START ||
-            (parser.topSymbol() instanceof Symbol.Repeater &&
-                    ((Symbol.Repeater)parser.topSymbol()).end == Symbol.MAP_END);
     if (parser.topSymbol() == Symbol.MAP_KEY_MARKER) {
       advance(Symbol.MAP_KEY_MARKER);
-      advance(Symbol.STRING);
       if (in.isEmpty()) {
         throw error("map-key");
       }
 
       String result = in.keySet().iterator().next();
-      // print(" - MAP_KEY: raw=" + result + " (getKeyPathString() = " + getKeyPathString() + ")");
+      print(" - MAP_KEY: raw=" + result + " (getKeyPathString() = " + getKeyPathString() + ")");
+      assert(result != null);
 
       // Strip the prefix consisting of the current keypath from this key
       if (!getKeyPathString().isEmpty()) {
@@ -144,13 +145,13 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
       pushKeyPathComponent(result);
       return result;
     } else {
-      advance(Symbol.STRING);
       if (in.isEmpty()) {
         throw error("string");
       }
       String val = (String)in.get(getKeyPathString());
-      print(" - STRING, map += " + getKeyPathString() + " -> " + in.toString());
-      print("         now in = " + in.toString());
+      print(" - STRING, map += '" + getKeyPathString() + "' -> '" + in.toString() + "'");
+      print("         now in=" + in.toString());
+      assert(val != null);
       return val;
     }
   }
@@ -203,6 +204,7 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
 
   @Override public long mapNext() throws IOException {
     trace("mapNext");
+    advance(Symbol.ITEM_END);
     return doMapNext(false);
   }
 
@@ -219,10 +221,6 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
     }
 
     trace("  doMapNext numLeft=" + numLeft);
-
-    if (numLeft > 0) {
-      parser.pushSymbol(Symbol.MAP_KEY_MARKER);
-    }
 
     if (numLeft == 0 && !fromReadMapStart) {
       advance(Symbol.MAP_END);
