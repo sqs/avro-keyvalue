@@ -22,13 +22,14 @@ import org.apache.commons.lang3.StringUtils;
 public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHandler {
 
   private Schema schema;
-  private Map<String, Object> in;
+  private Map<String, String> in;
 
   Stack<ReorderBuffer> reorderBuffers = new Stack<ReorderBuffer>();
   ReorderBuffer currentReorderBuffer;
 
   private static class ReorderBuffer {
-    public Map<String, String> savedFields = new HashMap<String, String>();
+    public Map<String, Map<String, String>> savedFields = new HashMap<String, Map<String, String>>();
+    public Map<String, String> origParser = null;
   }
 
   private KeyValueDecoder(Symbol root, Map<String, Object> in) throws IOException {
@@ -65,7 +66,8 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
 
 
   @Override public void readNull() throws IOException {
-    if (!((String)in.get(getKeyPathString())).equals("")) {
+    trace("readNull");
+    if (in.containsKey(getKeyPathString())) {
       error("null");
     }
   }
@@ -233,8 +235,24 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
     throw new IOException("skipMap not implemented");
   }
 
-  @Override public int readIndex() throws IOException {
-    return 0;
+  @Override
+  public int readIndex() throws IOException {
+    advance(Symbol.UNION);
+    Symbol.Alternative a = (Symbol.Alternative) parser.popSymbol();
+
+    String label;
+    if (in.isEmpty()) {
+      label = "null";
+    } else {
+      label = stripKeyPathSuffix(stripKeyPathPrefix(in.keySet().iterator().next(), getKeyPathString()));
+      parser.pushSymbol(Symbol.UNION_END);
+    }
+    int n = a.findLabel(label);
+    if (n < 0)
+      throw new AvroTypeException("Unknown union branch " + label);
+    parser.pushSymbol(a.getSymbol(n));
+    pushKeyPathComponent(label);
+    return n;
   }
 
   private AvroTypeException error(String type) {
@@ -247,6 +265,7 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
     String symbolStr = (parser.topSymbol() instanceof Symbol.Repeater) ?
             "Repeater:"+((Symbol.Repeater)parser.topSymbol()).end.toString() :
             parser.topSymbol().toString();
+    symbolStr = symbolStr.replace("org.apache.avro.io.parsing.", "");
     System.out.println(s + ":\t topSymbol=" + symbolStr + ", keyPath=" + getKeyPathString() + ", in=" + in.toString());
   }
 
@@ -260,59 +279,71 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
     if (top instanceof Symbol.FieldAdjustAction) {
       Symbol.FieldAdjustAction fa = (Symbol.FieldAdjustAction) top;
       String name = fa.fname;
-      // if (currentReorderBuffer != null) {
-      //   List<JsonElement> node = currentReorderBuffer.savedFields.get(name);
-      //   if (node != null) {
-      //     currentReorderBuffer.savedFields.remove(name);
-      //     currentReorderBuffer.origParser = in;
-      //     in = makeParser(node);
-      //     return null;
-      //   }
-      // }
-      print(" - doAction(fieldName=" + name);
-      // if (in.getCurrentToken() == JsonToken.FIELD_NAME) {
-      //   do {
-      //     String fn = in.getText();
-      //     in.nextToken();
-      //     if (name.equals(fn)) {
-      //       return null;
-      //     } else {
-      //       if (currentReorderBuffer == null) {
-      //         currentReorderBuffer = new ReorderBuffer();
-      //       }
-      //       currentReorderBuffer.savedFields.put(fn, getVaueAsTree(in));
-      //     }
-      //   } while (in.getCurrentToken() == JsonToken.FIELD_NAME);
-      //   throw new AvroTypeException("Expected field name not found: " + fa.fname);
-      // }
+      pushKeyPathComponent(name);
+      print(" - doAction(fieldName=" + name + ")");
+      if (currentReorderBuffer != null) {
+         Map<String, String> savedSubMap = currentReorderBuffer.savedFields.get(name);
+         if (savedSubMap != null) {
+           currentReorderBuffer.savedFields.remove(name);
+           currentReorderBuffer.origParser = in;
+           this.in = new HashMap<String, String>(savedSubMap);
+           print(" - goto savedSubMap");
+           return null;
+         }
+      }
+      if (in.size() > 0) {
+         do {
+           String nextKey = in.keySet().iterator().next();
+           String fn = nextKey.indexOf("|") == -1 ? nextKey : nextKey.substring(0, nextKey.indexOf("|"));
+           if (name.equals(fn)) {
+             print(" - name (" + name + ") == (" + fn + ")");
+             return null;
+           } else {
+             if (currentReorderBuffer == null) {
+               currentReorderBuffer = new ReorderBuffer();
+             }
+             Map<String, String> subMap = new HashMap<String, String>();
+             Iterator it = in.entrySet().iterator();
+             while (it.hasNext()) {
+               Map.Entry<String, String> entry = (Map.Entry)it.next();
+               String keyPrefix = fn + "|";
+               print(" - keyPrefix='" + keyPrefix + "', key='" + entry.getKey() + "'");
+               if (entry.getKey().startsWith(keyPrefix) || entry.getKey().equals(fn)) {
+                 //String keyWithoutPrefix = entry.getKey().substring(keyPrefix.length());
+                 print(" - save field '" + fn + "' = " + entry.getValue());
+                 subMap.put(/*keyWithoutPrefix*/fn, entry.getValue());
+                 it.remove();
+               }
+             }
+             currentReorderBuffer.savedFields.put(fn, subMap);
+           }
+           print(" - in=" + in);
+         } while (in.size() > 0);
+         throw new AvroTypeException("Expected field name not found: " + fa.fname);
+      }
     } else if (top == Symbol.FIELD_END) {
       print(" - FIELD_END");
-      // if (currentReorderBuffer != null && currentReorderBuffer.origParser != null) {
-      //   in = currentReorderBuffer.origParser;
-      //   currentReorderBuffer.origParser = null;
-      // }
+      if (currentReorderBuffer != null && currentReorderBuffer.origParser != null) {
+         in = currentReorderBuffer.origParser;
+         currentReorderBuffer.origParser = null;
+      }
+      popKeyPathComponent();
     } else if (top == Symbol.RECORD_START) {
       print(" - RECORD_START");
-      // if (in.getCurrentToken() == JsonToken.START_OBJECT) {
-      //   in.nextToken();
-      //   reorderBuffers.push(currentReorderBuffer);
-      //   currentReorderBuffer = null;
-      // } else {
-      //   throw error("record-start");
-      // }
+      reorderBuffers.push(currentReorderBuffer);
+      currentReorderBuffer = null;
     } else if (top == Symbol.RECORD_END || top == Symbol.UNION_END) {
       print(" - RECORD_END / UNION_END  (top = " + top + ")");
-      // if (in.getCurrentToken() == JsonToken.END_OBJECT) {
-      //   in.nextToken();
-      //   if (top == Symbol.RECORD_END) {
-      //     if (currentReorderBuffer != null && !currentReorderBuffer.savedFields.isEmpty()) {
-      //       throw error("Unknown fields: " + currentReorderBuffer.savedFields.keySet());
-      //     }
-      //     currentReorderBuffer = reorderBuffers.pop();
-      //   }
-      // } else {
-      //   throw error(top == Symbol.RECORD_END ? "record-end" : "union-end");
-      // }
+      if (in.size() == 0) {
+         if (top == Symbol.RECORD_END) {
+           if (currentReorderBuffer != null && !currentReorderBuffer.savedFields.isEmpty()) {
+             throw error("Unknown fields: " + currentReorderBuffer.savedFields.keySet());
+           }
+           currentReorderBuffer = reorderBuffers.pop();
+         }
+      } else {
+         throw error(top == Symbol.RECORD_END ? "record-end" : "union-end");
+      }
     } else {
       throw new AvroTypeException("Unknown action symbol " + top);
     }
@@ -341,6 +372,25 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
 
   private String getKeyPathString() {
     return StringUtils.join(keyPath, '|');
+  }
+
+  // otherKeyPath = "a|b|c", partialKeyPathToRemove="a|b" -> "c"
+  private String stripKeyPathPrefix(String otherKeyPath, String partialKeyPathToRemove) {
+    if (otherKeyPath.startsWith(getKeyPathString()) == false) {
+      trace("otherKeyPath '" + otherKeyPath + "' doesnt start with current key path");
+    }
+    assert(otherKeyPath.startsWith(getKeyPathString()));
+    if (otherKeyPath.indexOf("|") == -1) {
+      return otherKeyPath;
+    } else {
+      String keyPathPrefix = getKeyPathString() + "|";
+      return otherKeyPath.substring(keyPathPrefix.length());
+    }
+  }
+
+  // "a|b|c" -> "a"
+  private String stripKeyPathSuffix(String keyPath) {
+    return keyPath.indexOf("|") == -1 ? keyPath : keyPath.substring(0, keyPath.indexOf("|"));
   }
 }
 

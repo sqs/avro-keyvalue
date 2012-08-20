@@ -53,7 +53,6 @@ public class PrimitiveTypesDecodingTest extends TestCase {
     public void testNull() throws IOException {
         Schema schema = Schema.parse("\"null\"");
         java.util.Map<String, Object> in = new java.util.HashMap();
-        in.put("", "");
         assertEquals(null, decode(schema, in));
     }
 
