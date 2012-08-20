@@ -58,7 +58,6 @@ public class KeyValueEncoder extends ParsingEncoder implements Parser.ActionHand
   @Override
   public void writeNull() throws IOException {
     parser.advance(Symbol.NULL);
-    out.put(getKeyPathString(), "");
   }
 
   @Override

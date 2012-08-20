@@ -73,7 +73,6 @@ public class UnionEncodingTest extends TestCase {
         assertEquals(expectedN, write(schema, "a"));
 
         Map<String, String> expectedS = new java.util.HashMap();
-        expectedS.put("", "");
         assertEquals(expectedS, write(schema, null));
     }
 
@@ -81,7 +80,6 @@ public class UnionEncodingTest extends TestCase {
     Schema schema = Schema.parse("[\"null\", \"string\", \"int\"]");
 
     Map<String, String> expectedS = new java.util.HashMap();
-    expectedS.put("", "");
     assertEquals(expectedS, write(schema, null));
 
     Map<String, String> expectedN = new java.util.HashMap();

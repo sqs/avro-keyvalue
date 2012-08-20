@@ -56,7 +56,6 @@ public class PrimitiveTypesEncodingTest extends TestCase {
     public void testNull() throws IOException {
         Schema schema = Schema.parse("\"null\"");
         java.util.Map<String, String> expected = new java.util.HashMap();
-        expected.put("", "");
         assertEquals(expected, write(schema, null));
     }
 
