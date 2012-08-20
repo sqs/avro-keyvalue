@@ -125,10 +125,22 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
       if (in.isEmpty()) {
         throw error("map-key");
       }
+
       String result = in.keySet().iterator().next();
-      print(" - MAP_KEY: raw=" + result + " (getKeyPathString() = " + getKeyPathString() + ")");
-      if (!getKeyPathString().isEmpty()) result = result.replace("|" + getKeyPathString(), "");
-      if (result.indexOf('|') != -1) result = result.substring(0, result.indexOf('|'));
+      // print(" - MAP_KEY: raw=" + result + " (getKeyPathString() = " + getKeyPathString() + ")");
+
+      // Strip the prefix consisting of the current keypath from this key
+      if (!getKeyPathString().isEmpty()) {
+        String keyPathPrefix = getKeyPathString() + "|";
+        assert(result.startsWith(keyPathPrefix));
+        result = result.substring(keyPathPrefix.length());
+      }
+
+      // Only get the next key, not the entire descending keypath
+      if (result.indexOf('|') != -1) {
+        result = result.substring(0, result.indexOf('|'));
+      }
+
       pushKeyPathComponent(result);
       return result;
     } else {
