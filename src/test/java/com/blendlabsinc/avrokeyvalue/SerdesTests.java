@@ -93,4 +93,17 @@ public class SerdesTests extends TestCase {
   public void testBoolean() throws IOException {
     assertSerdesIsIdentity("\"boolean\"", true);
   }
+
+  public void testDeeplyNestedMap() throws IOException {
+    String schema = "{\"type\": \"map\", \"values\": {\"type\": \"map\", \"values\": {\"type\": \"map\", \"values\": \"string\"}}}";
+    Map<String, Map<String, Map<String, String>>> nestedMap = new java.util.TreeMap();
+    Map<String, String> mapAA = new java.util.TreeMap(); mapAA.put("aaa", "aaaa");
+    Map<String, String> mapBB = new java.util.TreeMap(); mapBB.put("bbb", "bbbb");
+    Map<String, Map<String, String>> mapA = new java.util.TreeMap(); mapA.put("aa", mapAA);
+    Map<String, Map<String, String>> mapB = new java.util.TreeMap(); mapB.put("bb", mapBB);
+    nestedMap.put("a", mapA);
+    nestedMap.put("b", mapB);
+
+    assertSerdesIsIdentity(schema, convertStringToUtf8(nestedMap));
+  }
 }
