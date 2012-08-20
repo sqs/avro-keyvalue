@@ -197,7 +197,7 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
   private long doMapNext(boolean fromReadMapStart) throws IOException {
     if (!fromReadMapStart) {
       Object removed = in.remove(getKeyPathString());
-      assert(removed != null);
+      // assert(removed != null);
       popKeyPathComponent();
     }
 
