@@ -62,7 +62,7 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
 
 
   @Override public void readNull() throws IOException {
-    if (!((String)in.get("")).equals("")) {
+    if (!((String)in.get(getKeyPathString())).equals("")) {
       error("null");
     }
   }
@@ -70,7 +70,7 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
   @Override
   public boolean readBoolean() throws IOException {
     advance(Symbol.BOOLEAN);
-    String val = (String)in.get("");
+    String val = (String)in.get(getKeyPathString());
     if (val == Boolean.toString(true) || val == Boolean.toString(false)) {
       return val == Boolean.toString(true);
     } else {
@@ -89,21 +89,21 @@ public class KeyValueDecoder extends ParsingDecoder implements Parser.ActionHand
   @Override
   public long readLong() throws IOException {
     advance(Symbol.LONG);
-    String val = (String)in.get("");
+    String val = (String)in.get(getKeyPathString());
     return Long.parseLong(val);
   }
 
   @Override
   public float readFloat() throws IOException {
     advance(Symbol.FLOAT);
-    String val = (String)in.get("");
+    String val = (String)in.get(getKeyPathString());
     return Float.parseFloat(val);
   }
 
   @Override
   public double readDouble() throws IOException {
     advance(Symbol.DOUBLE);
-    String val = (String)in.get("");
+    String val = (String)in.get(getKeyPathString());
     return Double.parseDouble(val);
   }
     
